@@ -38,6 +38,7 @@ public class JsonArray extends JsonElement {
 				first = false;
 			} else {
 				sb.append(',');
+				sb.append("\n");
 			}
 			sb.append(element.toString());
 		}
