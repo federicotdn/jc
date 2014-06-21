@@ -1,4 +1,5 @@
 from parser import *
+from test import error
 import sys, urllib2
 
 def main():
@@ -27,10 +28,6 @@ def readFromURL():
 		parse(json)
 	except (ValueError, urllib2.URLError):
 		error('Invalid URL.', 4)
-
-def error(msg, code):
-	sys.stderr.write('Error: ' + msg + '\n')
-	exit(code)
 
 if __name__ == '__main__':
 	main()
