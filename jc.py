@@ -1,46 +1,36 @@
 from parser import *
+import sys, urllib2
 
 def main():
 
-	test = """
-		[{ "a" : "asdfas",
-				  "b" : 1000000 ,
-				  "c" : { "d" : 33 }, 
-				  "h" : [],
-				  "g" : [ 1, 1 ], 
-				  "o" : null }]
-	"""
-	testdata = """
-	{
-		"glossary": {
-			"title": "example glossary",
-			"GlossDiv": {
-				"title": "S",
-				"GlossList": 
-					{
-					"ID": "SGML",
-					"SortAs": "SGML",
-					"GlossTerm": "Standard Generalized Markup Language",
-					"TrueValue": true,
-					"FalseValue": false,
-					"Gravity": -9.8,
-					"LargestPrimeLessThan100": 97,
-					"AvogadroNumber": 6.02E23,
-					"EvenPrimesGreaterThan2": null,
-					"PrimesLessThan10" : [2,3,5,7],
-					"Acronym": "SGML",
-					"Abbrev": "ISO 8879:1986",
-					"GlossDef": "A meta-markup language, used to create markup languages such as DocBook.",
-					"GlossSeeAlso": ["GML", "XML", "markup"],
-					"EmptyDict" : {},
-					"EmptyList" : []
-					}
-			}
-		}
-	}
-	"""
-	parse(testdata)
+	if len(sys.argv) != 3:
+		error('Invalid argument.', 1)
 
+	if sys.argv[1] == '-f':
+		readFromFile()
+	elif sys.argv[1] == '-u':
+		readFromURL()
+	else:
+		error('Invalid command.', 2)
+
+def readFromFile():
+	try:
+		f = open(sys.argv[2], "r")
+		parse(f.read())
+		f.close()
+	except IOError:
+		error('Unable to open file.', 3)
+
+def readFromURL():
+	try: 
+		json = urllib2.urlopen(sys.argv[2]).read()
+		parse(json)
+	except (ValueError, urllib2.URLError):
+		error('Invalid URL.', 4)
+
+def error(msg, code):
+	sys.stderr.write('Error: ' + msg + '\n')
+	exit(code)
 
 if __name__ == '__main__':
 	main()
