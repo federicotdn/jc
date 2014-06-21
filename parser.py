@@ -1,14 +1,9 @@
 from pyparsing import *
 
-TRUE = Keyword("true").setParseAction( replaceWith(True) )
-FALSE = Keyword("false").setParseAction( replaceWith(False) )
-NULL = Keyword("null").setParseAction( replaceWith(None) )
-
-jsonString = dblQuotedString.setParseAction( removeQuotes )
-
-jsonNumber = Combine( Optional('-') + ( '0' | Word('123456789',nums) ) +
-					Optional( '.' + Word(nums) ) +
-					Optional( Word('eE',exact=1) + Word(nums+'+-',nums) ) )
+jsonString = dblQuotedString.setParseAction(removeQuotes)
+jsonNumber = Combine(Optional('-') + ('0' | Word('123456789', nums)) +
+					Optional('.' + Word(nums)) +
+					Optional(Word('eE', exact = 1) + Word(nums + '+-', nums)))
 
 jsonRoot = Forward()
 
@@ -20,26 +15,26 @@ jsonElements = delimitedList( jsonValue )
 
 jsonArray = Group(Suppress('[') + Optional(jsonElements) + Suppress(']') ).setResultsName('jsonArray')
 
-jsonValue << ( jsonString | jsonNumber | Group(jsonObject)  | Group(jsonArray) | TRUE | FALSE | NULL )
-memberDef = Group( jsonString + Suppress(':') + jsonValue )
-jsonMembers = delimitedList( memberDef )
-jsonObject << Dict( Suppress('{') + Optional(jsonMembers) + Suppress('}') )
-jsonRoot << ( jsonObject | jsonArray )
+jTrue = Keyword("true").setParseAction(replaceWith(True))
+jFalse = Keyword("false").setParseAction(replaceWith(False))
+jNull = Keyword("null").setParseAction(replaceWith(None))
 
-jsonComment = cppStyleComment 
-jsonObject.ignore( jsonComment )
+jsonValue << (jsonString | jsonNumber | Group(jsonObject) | Group(jsonArray) | jTrue | jFalse | jNull)
+jsonDef = Group(jsonString + Suppress(':') + jsonValue)
+jsonMembers = delimitedList(jsonDef)
+jsonObject << Dict(Suppress('{') + Optional(jsonMembers) + Suppress('}'))
+jsonRoot << (jsonObject | jsonArray)
 
-def convertNumbers(s,l,toks):
-	n = toks[0]
+def convertNum(s, l, tokens):
+	num = tokens[0]
 	try:
-		return int(n)
+		return int(num)
 	except ValueError, ve:
-		return float(n)
+		return float(num)
 		
-jsonNumber.setParseAction( convertNumbers )
+jsonNumber.setParseAction(convertNum)
 
 def getType(res):
-		
 		if not isinstance(res, ParseResults):
 			return 'Primitive', res.__class__.__name__
 		
@@ -50,15 +45,15 @@ def parse(json):
 		convertToPython(jsonRoot.parseString(json))		
 	except ParseException:
 		print 'Invalid JSON'
+
 arrayCounter = 0
 objectCounter = 0
 tab = '\t'
 
 def convertToPython(result):
-
 	print('\ndef generateInstance(): ')
 
-	rootName = result.getName()
+	rootType, rootName = getType(result)
 	root = ""
 	if rootName == 'jsonArray':
 		root = convertJsonArray(result)
@@ -88,7 +83,7 @@ def convertJsonObject(result):
 
 	print(tab + objectName + ' = {}')
 
-	for k,v in result['jsonObject']:
+	for k, v in result['jsonObject']:
 		item = convert(v)
 		print(tab + objectName + '[\'' + str(k) + '\'] = ' + item)
 
