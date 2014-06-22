@@ -29,7 +29,7 @@ def convertNum(s, l, tokens):
 	num = tokens[0]
 	try:
 		return int(num)
-	except ValueError, ve:
+	except ValueError:
 		return float(num)
 		
 jsonNumber.setParseAction(convertNum)
